@@ -1,0 +1,109 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# -------------------------------
+# LOAD DATA
+# -------------------------------
+df = pd.read_csv("weather_tokyo_data.csv")
+
+df.columns = df.columns.str.strip().str.lower()
+
+# Create date
+df['date'] = pd.to_datetime(df['year'].astype(str) + '-' + df['day'])
+
+# Clean numeric columns
+df['temperature'] = df['temperature'].astype(str).str.replace('(', '').str.replace(')', '').str.strip().astype(float)
+df['humidity'] = df['humidity'].astype(float)
+df['atmospheric pressure'] = df['atmospheric pressure'].astype(float)
+
+# -------------------------------
+# 1. BASIC STATS
+# -------------------------------
+print("\n📊 BASIC STATS")
+print(df[['temperature','humidity','atmospheric pressure']].describe())
+
+# -------------------------------
+# 2. CORRELATION ANALYSIS
+# -------------------------------
+print("\n📈 CORRELATION MATRIX")
+print(df[['temperature','humidity','atmospheric pressure']].corr())
+
+# -------------------------------
+# 3. MOVING AVERAGE (TREND)
+# -------------------------------
+df['temp_ma7'] = df['temperature'].rolling(window=7).mean()
+
+plt.figure(figsize=(10,5))
+plt.plot(df['date'], df['temperature'], label="Temperature", alpha=0.5)
+plt.plot(df['date'], df['temp_ma7'], label="7-day Moving Avg", color='red')
+plt.legend()
+plt.title("Temperature Trend")
+plt.show()
+
+# -------------------------------
+# 4. TEMPERATURE vs HUMIDITY
+# -------------------------------
+plt.figure(figsize=(6,5))
+plt.scatter(df['temperature'], df['humidity'], alpha=0.5)
+plt.xlabel("Temperature")
+plt.ylabel("Humidity")
+plt.title("Temperature vs Humidity")
+plt.show()
+
+# -------------------------------
+# 5. PRESSURE vs TEMPERATURE
+# -------------------------------
+plt.figure(figsize=(6,5))
+plt.scatter(df['temperature'], df['atmospheric pressure'], alpha=0.5, color='green')
+plt.xlabel("Temperature")
+plt.ylabel("Pressure")
+plt.title("Temperature vs Pressure")
+plt.show()
+
+# -------------------------------
+# 6. HOTTEST & COLDEST DAYS
+# -------------------------------
+print("\n🔥 HOTTEST DAY")
+print(df.loc[df['temperature'].idxmax()])
+
+print("\n❄ COLDEST DAY")
+print(df.loc[df['temperature'].idxmin()])
+
+# -------------------------------
+# 7. HUMIDITY EXTREMES
+# -------------------------------
+print("\n💧 MOST HUMID DAY")
+print(df.loc[df['humidity'].idxmax()])
+
+print("\n🏜 LEAST HUMID DAY")
+print(df.loc[df['humidity'].idxmin()])
+
+# -------------------------------
+# 8. DAILY TEMP RANGE (BONUS)
+# -------------------------------
+df['temp_range'] = df['temperature'] - df['temperature'].min()
+
+plt.figure(figsize=(10,4))
+plt.plot(df['date'], df['temp_range'], color='purple')
+plt.title("Daily Temperature Range")
+plt.show()
+
+# -------------------------------
+# 9. MONTHLY ANALYSIS
+# -------------------------------
+df['month'] = df['date'].dt.month
+
+monthly_avg = df.groupby('month')['temperature'].mean()
+
+plt.figure(figsize=(8,4))
+monthly_avg.plot(kind='bar', color='skyblue')
+plt.title("Monthly Avg Temperature")
+plt.show()
+
+# -------------------------------
+# 10. SUMMARY REPORT
+# -------------------------------
+print("\n📌 SUMMARY")
+print(f"Average Temperature: {df['temperature'].mean():.2f}")
+print(f"Average Humidity: {df['humidity'].mean():.2f}")
+print(f"Average Pressure: {df['atmospheric pressure'].mean():.2f}")
